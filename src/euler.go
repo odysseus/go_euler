@@ -328,10 +328,7 @@ func euler7() int {
 // a 1,000 digit number
 func euler8() int64 {
 	// Read the file
-	f, err := readLines("./euler8.txt")
-	if err != nil {
-		panic(err)
-	}
+	f, _ := readLines("./euler8.txt")
 	// Concatenate the lines into a single string
 	bigstring := ""
 	for _, l := range f {
@@ -388,10 +385,7 @@ func euler10() int64 {
 // Find the largest product of 4 adjacent numbers in a 20x20 grid
 func euler11() int {
 	// Read the file
-	f, err := readLines("./euler11.txt")
-	if err != nil {
-		panic(err)
-	}
+	f, _ := readLines("./euler11.txt")
 	// Create a multidimensional array to store the ints
 	ints := make([][]int, 20)
 	// Parse the strings
@@ -402,7 +396,7 @@ func euler11() int {
 		row := make([]int, 20)
 		// Convert all the string values to ints
 		for x, y := range rowStrings {
-			row[x], err = strconv.Atoi(y)
+			row[x], _ = strconv.Atoi(y)
 		}
 		// And add them to the final array
 		ints[i] = row
@@ -461,15 +455,9 @@ func euler12() int {
 // Find the first ten digits of the sum of 100 50-digit numbers
 func euler13() string {
 	var result int64 = 0
-	f, err := readLines("./euler13.txt")
-	if err != nil {
-		panic(err)
-	}
+	f, _ := readLines("./euler13.txt")
 	for _, v := range f {
-		lineInt, err := strconv.Atoi(v[0:12])
-		if err != nil {
-			panic(err)
-		}
+		lineInt, _ := strconv.Atoi(v[0:12])
 		result += int64(lineInt)
 	}
 	return strconv.Itoa(int(result))[0:10]
@@ -533,10 +521,7 @@ func euler17() int {
 // to the highest sum
 func euler18() int {
 	// Read the file
-	f, err := readLines("./euler18.txt")
-	if err != nil {
-		panic(err)
-	}
+	f, _ := readLines("./euler18.txt")
 	// Feed that into a string array
 	dataStrings := make([][]string, len(f))
 	for i, v := range f {
