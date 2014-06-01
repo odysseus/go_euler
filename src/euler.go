@@ -39,7 +39,6 @@ func main() {
 	fmt.Printf("Project Euler Problem 22: %d\n", euler22())
 	fmt.Printf("Project Euler Problem 23: %d\n", euler23())
 	fmt.Printf("Project Euler Problem 24: %s\n", euler24())
-	
 
 	fmt.Printf("Took: %0.3fs\n", time.Since(t).Seconds())
 }
@@ -95,10 +94,10 @@ func primeAt(n int) int {
 // Returns a slice of all prime and non-prime factors for a number
 func factors(n int) []int {
 	facts := make([]int, 0, 2)
-	facts = []int{ 1 }
+	facts = []int{1}
 	r := int(math.Sqrt(float64(n)))
-	for i:=2; i<=r; i++ {
-		if n % i == 0 {
+	for i := 2; i <= r; i++ {
+		if n%i == 0 {
 			facts = append(facts, i)
 			facts = append(facts, n/i)
 		}
@@ -111,7 +110,7 @@ func factors(n int) []int {
 func primeFacts(n int64) []int {
 	facts := make([]int, 0, 2)
 	r := int(math.Sqrt(float64(n)))
-	for i:=0; i<=r; i++ {
+	for i := 0; i <= r; i++ {
 		if Sieve[i] && n%int64(i) == 0 {
 			facts = append(facts, i)
 		}
@@ -135,7 +134,7 @@ func factorsCount(n int) int {
 			break
 		}
 	}
-	return count-1
+	return count - 1
 }
 
 // Finds the sum of all divisors for n
@@ -370,8 +369,10 @@ func euler2() int {
 func euler3() int64 {
 	var n int64 = 600851475143
 	var i int64 = 0
-	for i<int64(len(Sieve)) {
-		if n == i { break }
+	for i < int64(len(Sieve)) {
+		if n == i {
+			break
+		}
 		if Sieve[i] && n%i == 0 {
 			for n%i == 0 {
 				n /= i
