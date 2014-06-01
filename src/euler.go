@@ -6,6 +6,7 @@ import (
 	"math"
 	"math/big"
 	"os"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -35,7 +36,10 @@ func main() {
 	fmt.Printf("Project Euler Problem 19: %d\n", euler19())
 	fmt.Printf("Project Euler Problem 20: %d\n", euler20())
 	fmt.Printf("Project Euler Problem 21: %d\n", euler21())
-
+	fmt.Printf("Project Euler Problem 22: %d\n", euler22())
+	fmt.Printf("Project Euler Problem 23: %d\n", euler23())
+	fmt.Printf("Project Euler Problem 24: %s\n", euler24())
+	
 
 	fmt.Printf("Took: %0.3fs\n", time.Since(t).Seconds())
 }
@@ -46,6 +50,132 @@ func main() {
 
 // Global prime sieve avoids initializing this constantly
 var Sieve []bool = primeSieve(10000000)
+
+// PRIMES AND FACTORING
+
+// Generates a prime sieve up to n
+func primeSieve(n int) []bool {
+	var sieve = make([]bool, (n + 1))
+	for i := 2; i < len(sieve); i++ {
+		sieve[i] = true
+	}
+	for i := 2; i*i <= n; i++ {
+		if sieve[i] {
+			j := 2
+			for i*j <= n {
+				sieve[i*j] = false
+				j++
+			}
+		}
+	}
+	return sieve
+}
+
+// Finds the Nth prime number
+// 50 Millionth Prime in ~17s
+func primeAt(n int) int {
+	sieve := make([]bool, 0, 0)
+	if n < len(Sieve) {
+		sieve = Sieve
+	} else {
+		size := (n / 50) * 1000
+		sieve = primeSieve(size)
+	}
+	count := 0
+	i := 0
+	for count < n {
+		i++
+		if sieve[i] {
+			count++
+		}
+	}
+	return i
+}
+
+// Returns a slice of all prime and non-prime factors for a number
+func factors(n int) []int {
+	facts := make([]int, 0, 2)
+	facts = []int{ 1 }
+	r := int(math.Sqrt(float64(n)))
+	for i:=2; i<=r; i++ {
+		if n % i == 0 {
+			facts = append(facts, i)
+			facts = append(facts, n/i)
+		}
+	}
+	sort.Ints(facts)
+	return facts
+}
+
+// Finds only the prime factors for a number
+func primeFacts(n int64) []int {
+	facts := make([]int, 0, 2)
+	r := int(math.Sqrt(float64(n)))
+	for i:=0; i<=r; i++ {
+		if Sieve[i] && n%int64(i) == 0 {
+			facts = append(facts, i)
+		}
+	}
+	return facts
+}
+
+// Finds the number of factors for a number, prime and non-prime
+func factorsCount(n int) int {
+	count := 1
+	for i, v := range Sieve {
+		if v && n%i == 0 {
+			current := 1
+			for n%i == 0 {
+				n /= i
+				current++
+			}
+			count *= current
+		}
+		if n == 1 {
+			break
+		}
+	}
+	return count-1
+}
+
+// Finds the sum of all divisors for n
+func sumdiv(n int) int {
+	r := int(math.Sqrt(float64(n)))
+	total := 1
+	for i := 2; i <= r; i++ {
+		if n%i == 0 {
+			total += i
+			total += n / i
+		}
+	}
+	if r*r == n {
+		total -= r
+	}
+	return total
+}
+
+func isPerfect(n int) bool {
+	return sumdiv(n) == n
+}
+
+func isAbundant(n int) bool {
+	return sumdiv(n) > n
+}
+
+func isDeficient(n int) bool {
+	return sumdiv(n) < n
+}
+
+// Simple iterative function to find the factorial of n
+func factorial(n int) int64 {
+	var fact int64 = 1
+	for i := n; i > 1; i-- {
+		fact *= int64(i)
+	}
+	return fact
+}
+
+// FILES AND UTILITY
 
 // readLines reads a whole file into memory
 // and returns a slice of its lines.
@@ -64,38 +194,7 @@ func readLines(path string) ([]string, error) {
 	return lines, scanner.Err()
 }
 
-func primeSieve(n int) []bool {
-	var sieve = make([]bool, (n + 1))
-	for i := 2; i < len(sieve); i++ {
-		sieve[i] = true
-	}
-	for i := 2; i*i <= n; i++ {
-		if sieve[i] {
-			j := 2
-			for i*j <= n {
-				sieve[i*j] = false
-				j++
-			}
-		}
-	}
-	return sieve
-}
-
-// 50 Millionth Prime in ~17s
-func primeAt(n int) int {
-	size := (n / 50) * 1000
-	sieve := primeSieve(size)
-	count := 0
-	i := 0
-	for count < n {
-		i++
-		if sieve[i] {
-			count++
-		}
-	}
-	return i
-}
-
+// Reverse a string
 func reverse(s string) string {
 	runes := []rune(s)
 	for i, j := 0, len(runes)-1; i < j; i, j = i+1, j-1 {
@@ -104,10 +203,36 @@ func reverse(s string) string {
 	return string(runes)
 }
 
+// Returns true is the string is a palindrome
 func isPalindrome(s string) bool {
 	return s == reverse(s)
 }
 
+// ARRAY OPERATIONS
+
+// Total all values in a slice of ints
+func arrSum(arr []int) int {
+	total := 0
+	for _, v := range arr {
+		total += v
+	}
+	return total
+}
+
+// Tests for slice inclusion
+func arrIncludes(arr []int, n int) bool {
+	for _, v := range arr {
+		if v == n {
+			return true
+		}
+	}
+	return false
+}
+
+// PROBLEM SPECIFIC HELPER FUNCTIONS
+
+// Finds a set of pythagorean triplets given two positive integers
+// m and n with m > n
 func findTrips(m, n int) []int {
 	a := m*m - n*n
 	b := 2 * m * n
@@ -115,6 +240,8 @@ func findTrips(m, n int) []int {
 	return []int{a, b, c}
 }
 
+// Wrapper method that checks for m being larger than n and m != n
+// which makes iteratively calling findTrips in a loop possible
 func pyTrips(m, n int) []int {
 	if m == n {
 		return []int{0, 0, 0}
@@ -125,39 +252,14 @@ func pyTrips(m, n int) []int {
 	}
 }
 
-func arrSum(arr []int) int {
-	total := 0
-	for _, v := range arr {
-		total += v
-	}
-	return total
-}
-
-func factorsCount(n int) int {
-	sieve := Sieve
-	count := 1
-	for i, v := range sieve {
-		if v && n%i == 0 {
-			current := 1
-			for n%i == 0 {
-				n /= i
-				current++
-			}
-			count *= current
-		}
-		if n == 1 {
-			break
-		}
-	}
-	return count
-}
-
+// Finds the number of characters used to write out a number
+// Suitable for numbers below 10,000
 func writtenCharCount(i int) int {
 	// Tallys the character counts by place value
 	var ones []int = []int{0, 3, 3, 5, 4, 4, 3, 5, 5, 4}
 	var tens []int = []int{0, 0, 6, 6, 5, 5, 5, 7, 6, 6}
 	var hundreds []int = []int{0, 10, 10, 12, 11, 11, 10, 12, 12, 11}
-	var thousands []int = []int{0, 11}
+	var thousands []int = []int{0, 11, 11, 13, 12, 12, 11, 13, 12, 12}
 	// Teens are a special case and are treated differently
 	var teens []int = []int{3, 6, 6, 8, 8, 7, 7, 9, 8, 8}
 	total := 0
@@ -170,7 +272,8 @@ func writtenCharCount(i int) int {
 		// Set i equal to the remainder below 1000 (Eg. i = 234)
 		i %= 1000
 		// Set the string to the new value (Eg. s = "234")
-		// Do not use substrings, this causes problems when the number has zeroes in it
+		// Do not use substrings, this causes problems when the number has leading zeroes
+		// so reconvert it each time
 		s = strconv.Itoa(i)
 	}
 	if i/100 > 0 {
@@ -203,28 +306,34 @@ func writtenCharCount(i int) int {
 	return total
 }
 
-func sumdiv(n int) int {
-	total := 1
-	r := int(math.Sqrt(float64(n)))
-	for i := 2; i <= r; i++ {
-		if n%i == 0 {
-			total += i
-			total += n / i
+// Finds the Nth lexicographic permutation intelligently by inferring
+// each subsequent number using the amount of permutations remaining
+// combined with the amount of permutations possible for x numbers
+// (Possible permutations are found using factorials)
+// For example: In the numbers 0..9, there are 362,880 permutations
+// for each starting number, so to find the millionth permutation the
+// permutation must start with 2, because 362,880 * 2 is less, and
+// 362,880 * 3 is more than a million. Following that same logic
+// we can compute the value for each subsequent digit
+func nthPermutation(series []int, n int) string {
+	l := len(series)
+	sort.Ints(series)
+	var remaining int64 = int64(n) - 1
+	permNum := ""
+	for i := 1; i < l; i++ {
+		j := remaining / factorial(l-i)
+		remaining = remaining % factorial(l-i)
+		permNum += strconv.Itoa(series[j])
+		series = append(series[:j], series[j+1:]...)
+		if remaining == 0 {
+			break
 		}
 	}
-	if n == r*r {
-		total -= r
+	// If any numbers remain, append them now
+	for _, v := range series {
+		permNum += strconv.Itoa(v)
 	}
-	return total
-}
-
-func arrIncludes(arr []int, n int) bool {
-	for _, v := range arr {
-		if v == n {
-			return true
-		}
-	}
-	return false
+	return permNum
 }
 
 ////
@@ -258,18 +367,17 @@ func euler2() int {
 }
 
 // Find the largest prime factor of 600851475143
-func euler3() int {
-	n := 600851475143
-	sieve := Sieve[0:10000]
-	for i, v := range sieve {
-		if n == i {
-			break
-		}
-		if v && n%i == 0 {
+func euler3() int64 {
+	var n int64 = 600851475143
+	var i int64 = 0
+	for i<int64(len(Sieve)) {
+		if n == i { break }
+		if Sieve[i] && n%i == 0 {
 			for n%i == 0 {
 				n /= i
 			}
 		}
+		i++
 	}
 	return n
 }
@@ -597,3 +705,71 @@ func euler21() int {
 	return total
 }
 
+// Find the name scores of all names in the .txt file
+func euler22() int64 {
+	// Read the file
+	f, _ := readLines("names.txt")
+	// Split into an array
+	names := strings.Split(f[0], ",")
+	// Remove the quotes from the individual strings
+	for i, v := range names {
+		names[i] = strings.Trim(v, "\"")
+	}
+
+	// Sort the array
+	sort.Strings(names)
+	var total int64 = 0
+	// Then iterate the array and sum up the scores
+	for i, v := range names {
+		// Convert the string to a byte array
+		byts := []byte(v)
+		score := 0
+		for _, val := range byts {
+			// Rather than using an array to find the letter scores, we can
+			// use the ASCII bytecode. Capital A is 65, B is 66, etc. so we
+			// just need to subtract the byte value by 64
+			score += int(val) - 64
+		}
+		// Compute the final score by multiplying the index + 1 for the rank
+		// and the sum of the byte array for the letter score
+		total += int64(score) * int64(i+1)
+	}
+	// And we're done
+	return total
+}
+
+// Find the sum of all numbers that cannot be written as the sum of
+// two abundant numbers
+func euler23() int {
+	abun := make([]int, 0, 10)
+	upperRange := 28124
+	for i := 2; i < upperRange; i++ {
+		if isAbundant(i) {
+			abun = append(abun, i)
+		}
+	}
+	sieve := make([]bool, upperRange, upperRange)
+	for i, _ := range sieve {
+		sieve[i] = true
+	}
+	for _, v1 := range abun {
+		for _, v2 := range abun {
+			if v1+v2 <= upperRange-1 {
+				sieve[v1+v2] = false
+			}
+		}
+	}
+	total := 0
+	for i, v := range sieve {
+		if v {
+			total += i
+		}
+	}
+	return total
+}
+
+func euler24() string {
+	series := make([]int, 10, 10)
+	series = []int{0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+	return nthPermutation(series, 1000000)
+}
