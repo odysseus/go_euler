@@ -39,6 +39,14 @@ func main() {
 	fmt.Printf("Project Euler Problem 22: %d\n", euler22())
 	fmt.Printf("Project Euler Problem 23: %d\n", euler23())
 	fmt.Printf("Project Euler Problem 24: %s\n", euler24())
+	fmt.Printf("Project Euler Problem 25: %d\n", euler25())
+	fmt.Printf("Project Euler Problem 26: %d\n", euler26())
+	fmt.Printf("Project Euler Problem 27: %d\n", euler27())
+	fmt.Printf("Project Euler Problem 28: %d\n", euler28())
+	fmt.Printf("Project Euler Problem 29: %d\n", euler29())
+	fmt.Printf("Project Euler Problem 30: %d\n", euler30())
+	fmt.Printf("Project Euler Problem 31: %d\n", euler31())
+	fmt.Printf("Project Euler Problem 32: %d\n", euler32())
 
 	fmt.Printf("Took: %0.3fs\n", time.Since(t).Seconds())
 }
@@ -89,6 +97,18 @@ func primeAt(n int) int {
 		}
 	}
 	return i
+}
+
+func isPrime(n int) bool {
+	if n < 0 {
+		return false
+	}
+	if n >= len(Sieve) {
+		sieve := primeSieve(n + 10)
+		return sieve[n]
+	} else {
+		return Sieve[n]
+	}
 }
 
 // Returns a slice of all prime and non-prime factors for a number
@@ -174,6 +194,25 @@ func factorial(n int) int64 {
 	return fact
 }
 
+// Returns an anonymous Fn that generates numbers
+// not divisible by two or three, useful for testing
+// primality
+func twoThreeStep() func() int {
+	i := 5
+	plusTwo := true
+	return func() int {
+		if plusTwo {
+			i += 2
+			plusTwo = false
+			return i
+		} else {
+			i += 4
+			plusTwo = true
+			return i
+		}
+	}
+}
+
 // FILES AND UTILITY
 
 // readLines reads a whole file into memory
@@ -219,9 +258,27 @@ func arrSum(arr []int) int {
 }
 
 // Tests for slice inclusion
-func arrIncludes(arr []int, n int) bool {
+func intArrIncludes(arr []int, n int) bool {
 	for _, v := range arr {
 		if v == n {
+			return true
+		}
+	}
+	return false
+}
+
+func bigArrIncludes(arr []*big.Int, n *big.Int) bool {
+	for _, v := range arr {
+		if v == n {
+			return true
+		}
+	}
+	return false
+}
+
+func stringArrIncludes(arr []string, s string) bool {
+	for _, v := range arr {
+		if v == s {
 			return true
 		}
 	}
@@ -333,6 +390,91 @@ func nthPermutation(series []int, n int) string {
 		permNum += strconv.Itoa(v)
 	}
 	return permNum
+}
+
+// Finds the length of the repeating cycle for 1/n
+func repeatingCycleLength(n int) int {
+	// For this we only need to analyze the remainder
+	// once a remainder repeats itself, the cycle has
+	// terminated
+	// The longest possible cycle length for any number is n-1
+	// so we find the remainder at the n-1 position, and measure
+	// to see when this remainder repeats
+	rest := 1
+	for i := 0; i < n; i++ {
+		rest = (rest * 10) % n
+	}
+	r0 := rest
+	l := 0
+	for true {
+		// iterate through until the cycle repeats
+		rest = (rest * 10) % n
+		l++
+		if rest == r0 {
+			break
+		}
+	}
+	return l
+}
+
+// Returns a partially evaluated quadratic formula for Euler 27
+// all that is needed is to fill in the n value
+func eulerQuadratic(a, b int) func(n int) int {
+	return func(n int) int {
+		return (n*n + a*n + b)
+	}
+}
+
+// Takes a partially evaluated quadratic Fn (From Euler 27) and
+// iterates through n terms finding how many consecutive primes
+// an equation can generate
+func quadConsecutivePrimes(fn func(n int) int) int {
+	count := 0
+	for i := 0; true; i++ {
+		if isPrime(fn(i)) {
+			count++
+		} else {
+			break
+		}
+	}
+	return count
+}
+
+// Returns true if a number is equal to the sum of the fifth powers of all its digits
+// Euler 30
+func sumOfFifths(n int) bool {
+	s := strconv.Itoa(n)
+	total := 0
+	for _, v := range s {
+		i := int(v - '0')
+		total += int(math.Pow(float64(i), 5.0))
+	}
+	if total == n {
+		return true
+	} else {
+		return false
+	}
+}
+
+// Returns true if the string is a 1 to 9 pandigital
+// Used for Euler 32
+func isPandigital(s string) bool {
+	if len(s) != 9 {
+		return false
+	}
+	digits := []rune{'1', '2', '3', '4', '5', '6', '7', '8', '9'}
+	for _, d := range digits {
+		contains := false
+		for _, v := range s {
+			if d == v {
+				contains = true
+			}
+		}
+		if !contains {
+			return false
+		}
+	}
+	return true
 }
 
 ////
@@ -694,7 +836,7 @@ func euler21() int {
 	amic := make([]int, 0, 10)
 	for i := 2; i < 10000; i++ {
 		if i == sumdiv(sumdiv(i)) && sumdiv(i) != i {
-			if !arrIncludes(amic, i) {
+			if !intArrIncludes(amic, i) {
 				amic = append(amic, i, sumdiv(i))
 			}
 		}
@@ -769,8 +911,186 @@ func euler23() int {
 	return total
 }
 
+// Find the 1 millionth lexicographical permutation of 0123456789
 func euler24() string {
 	series := make([]int, 10, 10)
 	series = []int{0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
 	return nthPermutation(series, 1000000)
 }
+
+// Find the n in Fn where n is the nth term in the Fibonacci sequence
+// where Fn has more than 1000 digits
+func euler25() int {
+	a := big.NewInt(1)
+	b := big.NewInt(2)
+	// F1 and F2 are both 1, so starting at 2 means we are at F3
+	count := 3
+	digits := 1
+	for digits < 1000 {
+		count++
+		b = new(big.Int).Add(a, b)
+		a = new(big.Int).Sub(b, a)
+		digits = len(b.String())
+	}
+	return count
+}
+
+// Find the value for d < 1000 where 1/d has the largest recurring
+// decimal sequence
+func euler26() int {
+	maxlen := 0
+	maxn := 0
+	for i := 901; i < 1000; i += 2 {
+		// Maximum cycle length is n-1, and primes will generate
+		// the longest nonrepeating cycles, so we check only prime
+		// numbers between 900-1000
+		if Sieve[i] {
+			if repeatingCycleLength(i) > maxlen {
+				maxlen = repeatingCycleLength(i)
+				maxn = i
+			}
+		}
+	}
+	return maxn
+}
+
+// Given the quadratic formula n*n + an + b where a < 1000 and b < 1000
+// find the product of a and b for the equation that produces the longest
+// string of consecutive primes for successive values of n starting with n=0
+func euler27() int {
+	// a: -61 | b: 971 | length: 71
+	// brute force takes 0.663s
+	// Optimizations suggested by the forums: b must be prime and a must be odd
+	// Simply by changing to problem to consider only odds reduces the runtime to ~0.172s
+	// Checking primes only with b means we check only positive primes below 1000, this
+	// reduces the runtime even more to 0.035s a ~20X improvement over the original
+	max := 0
+	maxProduct := 0
+	rang := 1000
+	for a := -rang + 1; a < rang; a += 2 {
+		for b := 3; b < rang; b += 2 {
+			if isPrime(b) {
+				quad := eulerQuadratic(a, b)
+				count := quadConsecutivePrimes(quad)
+				if count > max {
+					max = count
+					maxProduct = a * b
+				}
+			}
+		}
+	}
+	return maxProduct
+}
+
+// Find the sum of the diagonals in a 1001 by 1001 grid formed by a spiral
+// of numbers
+func euler28() int {
+	n := 1
+	d1 := 0
+	d2 := 0
+	for i := 2; i <= 1001; i += 2 {
+		for x := 0; x < 2; x++ {
+			n += i
+			d1 += n
+			n += i
+			d2 += n
+		}
+	}
+	return (d1 + d2 + 1)
+}
+
+// Find the number of distinct terms generated by a^b when
+// a and b are in the range (2..100)
+func euler29() int {
+	// If you don't need them for math, storing big.Ints as strings
+	// seems to be best practice and makes them easier to operate with
+	terms := make([]string, 0, 100)
+	for a := 2; a <= 100; a++ {
+		for b := 2; b <= 100; b++ {
+			bigA := big.NewInt(int64(a))
+			bigB := big.NewInt(int64(b))
+			// big.Ints cannot be compared unless they are converted to strings
+			t := new(big.Int).Exp(bigA, bigB, nil).String()
+			// Only add the term if it does not exist in the array
+			if !stringArrIncludes(terms, t) {
+				terms = append(terms, t)
+			}
+		}
+	}
+	// The length of the array will be the number of unique terms
+	return len(terms)
+}
+
+// Find the sum of all numbers that can be written as the fifth powers of their digits
+func euler30() int {
+	// To set the upper limit we use 9^5 (59,049) to sound out the maximum possible value
+	// six nines raised to the fifth power (9^5) * 6 equals 354294, beyond that we would
+	// need at least seven digits to reach a higher total sum, which invaldiates all
+	// answers higher than that within the context of the problem
+	total := 0
+	for i := 10; i < 354294; i++ {
+		if sumOfFifths(i) {
+			total += i
+		}
+	}
+	return total
+}
+
+// How many different ways can 2 quid be made using any combination of British coins
+func euler31() int {
+	count := 0
+	for a := 200; a >= 0; a -= 200 {
+		for b := a; b >= 0; b -= 100 {
+			for c := b; c >= 0; c -= 50 {
+				for d := c; d >= 0; d -= 20 {
+					for e := d; e >= 0; e -= 10 {
+						for f := e; f >= 0; f -= 5 {
+							for g := f; g >= 0; g -= 2 {
+								count++
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+	return count
+}
+
+// Find the sum of all products whose multiplicand/multiplier/product
+// identity is a 1 to 9 pandigital, Eg: 39 x 186 = 7254
+func euler32() int {
+	pandigits := make([]int, 0, 10)
+	for a := 1; a < 100; a++ {
+		for b := 100; b < 10000; b++ {
+			if (a*b)/10000 >= 1 {
+				continue
+			}
+			s := strconv.Itoa(a) + strconv.Itoa(b) + strconv.Itoa(a*b)
+			if isPandigital(s) {
+				if !intArrIncludes(pandigits, a*b) {
+					pandigits = append(pandigits, a*b)
+				}
+			}
+		}
+	}
+	return arrSum(pandigits)
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
