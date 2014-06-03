@@ -47,6 +47,9 @@ func main() {
 	fmt.Printf("Project Euler Problem 30: %d\n", euler30())
 	fmt.Printf("Project Euler Problem 31: %d\n", euler31())
 	fmt.Printf("Project Euler Problem 32: %d\n", euler32())
+	fmt.Printf("Project Euler Problem 33: %d\n", euler33())
+	fmt.Printf("Project Euler Problem 34: %d\n", euler34())
+	fmt.Printf("Project Euler Problem 35: %d\n", euler35())
 
 	fmt.Printf("Took: %0.3fs\n", time.Since(t).Seconds())
 }
@@ -392,6 +395,32 @@ func nthPermutation(series []int, n int) string {
 	return permNum
 }
 
+// Creating an array of permutations
+
+// Global variable needed to store the permutations since the permute Fn is recursive
+var Permutations []string = make([]string, 0, 2)
+
+// Method should not be called directly, use stringPermutations instead
+func strPermute(head, tail string) {
+	n := len(tail)
+	if n == 0 {
+		Permutations = append(Permutations, head)
+	} else {
+		for i := 0; i < n; i++ {
+			strPermute(head+string(tail[i]), tail[0:i]+tail[i+1:])
+		}
+	}
+}
+
+// Wrapper function to empty the global slice and call the recursive method
+// It also returns a COPY of Permutations, so running the method subsequent
+// times will not change the values assigned to previous runs if needed
+func stringPermutations(s string) []string {
+	Permutations = make([]string, 0, 2)
+	strPermute("", s)
+	return Permutations
+}
+
 // Finds the length of the repeating cycle for 1/n
 func repeatingCycleLength(n int) int {
 	// For this we only need to analyze the remainder
@@ -475,6 +504,119 @@ func isPandigital(s string) bool {
 		}
 	}
 	return true
+}
+
+// Finds the sum of the factorials of all the digits of n
+func sumOfDigitFactorials(n int) int64 {
+	s := strconv.Itoa(n)
+	var factSum int64 = 0
+	for _, v := range s {
+		factSum += factorial(int(v - '0'))
+	}
+	return factSum
+}
+
+func arrUnion(a, b []int) []int {
+	final := make([]int, 0, 2)
+	for _, av := range a {
+		for _, bv := range b {
+			if av == bv {
+				final = append(final, av)
+			}
+		}
+	}
+	return final
+}
+
+func maxValInt(arr []int) int {
+	max := arr[0]
+	for _, v := range arr {
+		if v > max {
+			max = v
+		}
+	}
+	return max
+}
+
+func simplifyFrac(num, den int) (fnum, fden int) {
+	if num%den == 0 {
+		return (num / den), 1
+	}
+	if den%num == 0 {
+		return 1, (den / num)
+	}
+	maxFactor := 1
+	factorsUnion := arrUnion(factors(num), factors(den))
+	if len(factorsUnion) > 0 {
+		maxFactor = maxValInt(factorsUnion)
+	}
+	return (num / maxFactor), (den / maxFactor)
+}
+
+// Returns true if a fraction can be simplified using the (incorrect)
+// method of canceling matching digits, as described in Euler 33
+func stupidSimplifiable(num, den int) bool {
+	if num == den {
+		return false
+	}
+	if num%10 == 0 || den%10 == 0 {
+		return false
+	}
+	snum, sden := strconv.Itoa(num), strconv.Itoa(den)
+	if snum[0] != snum[1] && sden[0] != sden[1] {
+		for _, vn := range snum {
+			for _, vd := range sden {
+				if vn == vd {
+					return true
+				}
+			}
+		}
+	}
+	return false
+}
+
+// Simplifies a fraction using the incorrect method of cancelling matching digits
+// described in Euler 33. This method is purpose built for Euler 33, so only two
+// two-digit numbers that were vetted by the stupidSimplifiable method will work
+func stupidSimplified(num, den int) (n, d int) {
+	snum, sden := strconv.Itoa(num), strconv.Itoa(den)
+	if snum[0] == sden[0] {
+		return int(snum[1] - '0'), int(sden[1] - '0')
+	}
+	if snum[0] == sden[1] {
+		return int(snum[1] - '0'), int(sden[0] - '0')
+	}
+	if snum[1] == sden[0] {
+		return int(snum[0] - '0'), int(sden[1] - '0')
+	}
+	if snum[1] == sden[1] {
+		return int(snum[0] - '0'), int(sden[0] - '0')
+	}
+	return -1, -1
+}
+
+// Tests circular primality, a circular prime is a prime where all
+// rotations of its digits are also prime. Eg: 197, 971, and 719
+func isCircularPrime(n int) bool {
+	rotations := intRotations(n)
+	for _, v := range rotations {
+		if !isPrime(v) {
+			return false
+		}
+	}
+	return true
+}
+
+// Returns a slice of all int rotations for the given int
+// Eg: 123 -> [123, 231, 312]
+func intRotations(n int) []int {
+	rotations := make([]int, 0, 2)
+	s := strconv.Itoa(n)
+	for i := 0; i < len(s); i++ {
+		rotated, _ := strconv.Atoi(s[i:] + s[:i])
+		rotations = append(rotations, rotated)
+	}
+	return rotations
 }
 
 ////
@@ -1077,20 +1219,56 @@ func euler32() int {
 	return arrSum(pandigits)
 }
 
+// Find the value of the denominator, in the lowest terms, for the product of the
+// four fractions below 1 that can be incorrectly simplified by eliminating a digit
+// Eg: 49/98 = 4/8
+func euler33() int {
+	prodNum, prodDen := 1, 1
+	// Check all numbers of the form xx/yy
+	for n := 10; n < 100; n++ {
+		for d := 10; d < 100; d++ {
+			// Must be less than 1
+			if n < d {
+				// If it can be simplified using the cancelling method
+				if stupidSimplifiable(n, d) {
+					// Simplify it
+					sn, sd := stupidSimplified(n, d)
+					// Then compare the result to the original fraction
+					if float32(sn)/float32(sd) == float32(n)/float32(d) {
+						// If they are equal, multiply the fraction holding the answers
+						prodNum *= n
+						prodDen *= d
+					}
+				}
+			}
+		}
+	}
+	// Simplify the product of the fractions found
+	_, simpDen := simplifyFrac(prodNum, prodDen)
+	// As per the question, return the simplified denominator
+	return simpDen
+}
 
+// Find the sum of all numbers that are the sum of the factorials of their digits
+func euler34() int {
+	total := 0
+	for i := 3; i < 100000; i++ {
+		if sumOfDigitFactorials(i) == int64(i) {
+			total += i
+		}
+	}
+	return total
+}
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+// Find the number of circular primes below 1 million
+func euler35() int {
+	count := 0
+	for i := 2; i < 1000000; i++ {
+		if Sieve[i] {
+			if isCircularPrime(i) {
+				count++
+			}
+		}
+	}
+	return count
+}
