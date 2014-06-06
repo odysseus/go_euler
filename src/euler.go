@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"bytes"
 	"fmt"
 	"math"
 	"math/big"
@@ -50,6 +51,8 @@ func main() {
 	fmt.Printf("Project Euler Problem 33: %d\n", euler33())
 	fmt.Printf("Project Euler Problem 34: %d\n", euler34())
 	fmt.Printf("Project Euler Problem 35: %d\n", euler35())
+	fmt.Printf("Project Euler Problem 36: %d\n", euler36())
+	fmt.Printf("Project Euler Problem 37: %d\n", euler37())
 
 	fmt.Printf("Took: %0.3fs\n", time.Since(t).Seconds())
 }
@@ -617,6 +620,42 @@ func intRotations(n int) []int {
 		rotations = append(rotations, rotated)
 	}
 	return rotations
+}
+
+// Converts an integer to its binary representation in string form
+func intToBinString(n int) string {
+	var original bytes.Buffer
+	var buffer bytes.Buffer
+	for n > 0 {
+		original.WriteString(strconv.Itoa(n % 2))
+		n /= 2
+	}
+	chars := original.String()
+	for i := len(chars) - 1; i >= 0; i-- {
+		buffer.WriteByte(chars[i])
+	}
+	return buffer.String()
+}
+
+func truncated(n int) []int {
+	s := strconv.Itoa(n)
+	truncated := make([]int, 0, 2)
+	for i, _ := range s {
+		a, _ := strconv.Atoi(s[:i])
+		b, _ := strconv.Atoi(s[i:])
+		truncated = append(truncated, a, b)
+	}
+	return truncated[1:]
+}
+
+func isTruncatedPrime(n int) bool {
+	tarr := truncated(n)
+	for _, v := range tarr {
+		if !isPrime(v) {
+			return false
+		}
+	}
+	return true
 }
 
 ////
@@ -1272,3 +1311,50 @@ func euler35() int {
 	}
 	return count
 }
+
+// Find the sum of all numbers below 1,000,000 that are palindromic
+// in both Base-10 and Base-2
+func euler36() int {
+	total := 0
+	for i := 1; i < 1000000; i += 2 {
+		if i%10 == 0 {
+			continue
+		}
+		s := strconv.Itoa(i)
+		if isPalindrome(s) {
+			bs := intToBinString(i)
+			if isPalindrome(bs) {
+				total += i
+			}
+		}
+	}
+	return total
+}
+
+// Find the sum of the eleven numbers that remain prime when truncated
+// from right to left and left to right
+func euler37() int {
+	total := 0
+	for i := 11; i < 1000000; i += 2 {
+		if isPrime(i) {
+			if isTruncatedPrime(i) {
+				total += i
+			}
+		}
+	}
+	return total
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
