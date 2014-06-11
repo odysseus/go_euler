@@ -57,6 +57,7 @@ func main() {
 	fmt.Printf("Project Euler Problem 39: %d\n", euler39())
 	fmt.Printf("Project Euler Problem 40: %d\n", euler40())
 	fmt.Printf("Project Euler Problem 41: %d\n", euler41())
+	fmt.Printf("Project Euler Problem 42: %d\n", euler42())
 
 	fmt.Printf("Took: %0.3fs\n", time.Since(t).Seconds())
 }
@@ -521,15 +522,17 @@ func sumOfFifths(n int) bool {
 
 // Returns true if the string is a 1 to 9 pandigital
 // Used for Euler 32
+// TODO : Fix this conversion
 func isPandigital(s string) bool {
-	if len(s) != 9 {
-		return false
+	digits := make([]int, len(s), len(s))
+	for i := 1; i <= len(s); i++ {
+		digits[i-1] = i
 	}
-	digits := []rune{'1', '2', '3', '4', '5', '6', '7', '8', '9'}
 	for _, d := range digits {
 		contains := false
 		for _, v := range s {
-			if d == v {
+			intv := int(v - '0')
+			if d == intv {
 				contains = true
 			}
 		}
@@ -1459,17 +1462,63 @@ func euler40() int {
 	return final
 }
 
+// Find the largest n-digit pandigital prime
 func euler41() int {
 	max := 0
-	for i := 123456789; i <= 987654321; i += 2 {
-		if isPandigital(strconv.Itoa(i)) {
-			if isPrime(i) {
-				max = i
+	// manually discovered it was seven digits, but it will work as a
+	// general solution as well by adding 8 and 9 to the string
+	digits := "1234567"
+	for max == 0 {
+		// Generate all permutations
+		permutations := stringPermutations(digits)
+		for _, v := range permutations {
+			intval, _ := strconv.Atoi(v)
+			// They are already largest->smallest, so the first prime we
+			// find will be our answer
+			if isPrime(intval) {
+				max = intval
 			}
+		}
+		if max == 0 {
+			digits = digits[:len(digits)-1]
+			permutations = stringPermutations(digits)
 		}
 	}
 	return max
 }
+
+// How many triangle words are there in a file of two thousand words
+func euler42() int {
+	// Read the file
+	f, _ := readLines("words.txt")
+	// Split into an array
+	words := strings.Split(f[0], ",")
+	// Remove the quotes from the individual strings
+	for i, v := range words {
+		words[i] = strings.Trim(v, "\"")
+	}
+	// Start the problem
+	total := 0
+	// Generate triangle numbers
+	triangles := make([]int, 1000, 1000)
+	triangles[0] = 1
+	for i:=1; i<len(triangles); i++ {
+		triangles[i] = (i+1) + triangles[i-1]
+	}
+	// Get the word scores
+	for _, w := range words {
+		score := 0
+		for _, c := range w {
+			score += int(c)-64
+		}
+		// See if the word score is a triangle number
+		for _, v := range triangles {
+			if score == v { total++ }
+		}
+	}
+	return total
+}
+
 
 
 
