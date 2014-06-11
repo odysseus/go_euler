@@ -53,6 +53,10 @@ func main() {
 	fmt.Printf("Project Euler Problem 35: %d\n", euler35())
 	fmt.Printf("Project Euler Problem 36: %d\n", euler36())
 	fmt.Printf("Project Euler Problem 37: %d\n", euler37())
+	fmt.Printf("Project Euler Problem 38: %d\n", euler38())
+	fmt.Printf("Project Euler Problem 39: %d\n", euler39())
+	fmt.Printf("Project Euler Problem 40: %d\n", euler40())
+	fmt.Printf("Project Euler Problem 41: %d\n", euler41())
 
 	fmt.Printf("Took: %0.3fs\n", time.Since(t).Seconds())
 }
@@ -110,11 +114,38 @@ func isPrime(n int) bool {
 		return false
 	}
 	if n >= len(Sieve) {
-		sieve := primeSieve(n + 10)
-		return sieve[n]
+		return crunchIsPrime(n)
 	} else {
 		return Sieve[n]
 	}
+}
+
+func crunchIsPrime(n int) bool {
+	if n < 0 {
+		return false
+	}
+	if n == 1 {
+		return false
+	}
+	if n == 2 || n == 3 {
+		return true
+	}
+	if n%2 == 0 {
+		return false
+	}
+	if n%3 == 0 {
+		return false
+	}
+	if n < 9 {
+		return true
+	}
+	r := int(math.Sqrt(float64(n)))
+	for i := 5; i <= r; i += 6 {
+		if n%i == 0 || n%i+2 == 0 {
+			return false
+		}
+	}
+	return true
 }
 
 // Returns a slice of all prime and non-prime factors for a number
@@ -656,6 +687,26 @@ func isTruncatedPrime(n int) bool {
 		}
 	}
 	return true
+}
+
+func coprime(m, n int) bool {
+	return len(arrUnion(factors(m), factors(n))) == 1
+}
+
+func pyTriplets(m, n, k int) []int {
+	if m > n {
+		a, b, c := 0, 0, 0
+		if (m-n)%2 != 0 && coprime(m, n) {
+			a = k * (m*m - n*n)
+			b = k * (2 * m * n)
+			c = k * (m*m + n*n)
+		}
+		return []int{a, b, c}
+	} else if m == n {
+		return []int{0, 0, 0}
+	} else {
+		return pyTriplets(n, m, k)
+	}
 }
 
 ////
@@ -1345,7 +1396,80 @@ func euler37() int {
 	return total
 }
 
+// Find the largest 1 to 9 pandigital made by concatenating the products
+// of n * i where i is in the series (1, 2, 3, ...)
+func euler38() int64 {
+	var max int64 = 0
+	for i := 1; i < 10000; i++ {
+		s := strconv.Itoa(i)
+		if s[0] != '9' {
+			continue
+		}
+		for n := 2; len(s) < 9; n++ {
+			s += strconv.Itoa(i * n)
+		}
+		if len(s) == 9 {
+			if isPandigital(s) {
+				test, _ := strconv.Atoi(s)
+				if int64(test) > max {
+					max = int64(test)
+				}
+			}
+		}
+	}
+	return max
+}
 
+// Find the number, below 1,000 which has the most possible solutions
+// for a+b+c=n where a, b, and c come from Pythagorean triples
+func euler39() int {
+	tally := make([]int, 1000, 1000)
+	for a := 1; a <= 50; a++ {
+		for b := 1; b <= 50; b++ {
+			for c := 1; c <= 50; c++ {
+				sum := arrSum(pyTriplets(a, b, c))
+				if sum < 1000 && sum > 0 {
+					tally[sum]++
+				}
+			}
+		}
+	}
+	max := 0
+	n := 0
+	for i, v := range tally {
+		if v >= max {
+			max = v
+			n = i
+		}
+	}
+	return n
+}
+
+func euler40() int {
+	var bigstring bytes.Buffer
+	for i := 0; i < 250000; i++ {
+		bigstring.WriteString(strconv.Itoa(i))
+	}
+	final := 1
+	indices := []int{1, 10, 100, 1000, 10000, 100000, 1000000}
+	s := bigstring.String()
+	for _, v := range indices {
+		final *= int(s[v] - '0')
+	}
+	return final
+}
+
+func euler41() int {
+	max := 0
+	for i := 123456789; i <= 987654321; i += 2 {
+		if isPandigital(strconv.Itoa(i)) {
+			if isPrime(i) {
+				max = i
+			}
+		}
+	}
+	return max
+}
 
 
 
