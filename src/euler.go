@@ -814,7 +814,7 @@ func euler7() int {
 // a 1,000 digit number
 func euler8() int64 {
 	// Read the file
-	f, _ := readLines("./euler8.txt")
+	f, _ := readLines("data/euler8.txt")
 	// Concatenate the lines into a single string
 	bigstring := ""
 	for _, l := range f {
@@ -871,7 +871,7 @@ func euler10() int64 {
 // Find the largest product of 4 adjacent numbers in a 20x20 grid
 func euler11() int {
 	// Read the file
-	f, _ := readLines("./euler11.txt")
+	f, _ := readLines("data/euler11.txt")
 	// Create a multidimensional array to store the ints
 	ints := make([][]int, 20)
 	// Parse the strings
@@ -941,7 +941,7 @@ func euler12() int {
 // Find the first ten digits of the sum of 100 50-digit numbers
 func euler13() string {
 	var result int64 = 0
-	f, _ := readLines("./euler13.txt")
+	f, _ := readLines("data/euler13.txt")
 	for _, v := range f {
 		lineInt, _ := strconv.Atoi(v[0:12])
 		result += int64(lineInt)
@@ -1007,7 +1007,7 @@ func euler17() int {
 // to the highest sum
 func euler18() int {
 	// Read the file
-	f, _ := readLines("./euler18.txt")
+	f, _ := readLines("data/euler18.txt")
 	// Feed that into a string array
 	dataStrings := make([][]string, len(f))
 	for i, v := range f {
@@ -1086,7 +1086,7 @@ func euler21() int {
 // Find the name scores of all names in the .txt file
 func euler22() int64 {
 	// Read the file
-	f, _ := readLines("names.txt")
+	f, _ := readLines("data/names.txt")
 	// Split into an array
 	names := strings.Split(f[0], ",")
 	// Remove the quotes from the individual strings
@@ -1490,7 +1490,7 @@ func euler41() int {
 // How many triangle words are there in a file of two thousand words
 func euler42() int {
 	// Read the file
-	f, _ := readLines("words.txt")
+	f, _ := readLines("data/words.txt")
 	// Split into an array
 	words := strings.Split(f[0], ",")
 	// Remove the quotes from the individual strings
@@ -1502,32 +1502,21 @@ func euler42() int {
 	// Generate triangle numbers
 	triangles := make([]int, 1000, 1000)
 	triangles[0] = 1
-	for i:=1; i<len(triangles); i++ {
-		triangles[i] = (i+1) + triangles[i-1]
+	for i := 1; i < len(triangles); i++ {
+		triangles[i] = (i + 1) + triangles[i-1]
 	}
 	// Get the word scores
 	for _, w := range words {
 		score := 0
 		for _, c := range w {
-			score += int(c)-64
+			score += int(c) - 64
 		}
 		// See if the word score is a triangle number
 		for _, v := range triangles {
-			if score == v { total++ }
+			if score == v {
+				total++
+			}
 		}
 	}
 	return total
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
